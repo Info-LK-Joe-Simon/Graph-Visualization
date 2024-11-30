@@ -8,6 +8,17 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
+/**
+ * Klasse Knoten.
+ * für die Darstellungen eines Graphen mittels Adjazenzmatrix
+ * auf der Basis des Programms von O.Zimmermann (Benötigt mindestens die Klasse Knoten)
+ *
+ * @author F.Paul & J.S.Dschungelskog
+ * @version 1.0
+ *
+ * @source https://github.com/Info-LK-Joe-Simon/Graph-Visualization
+ */
+
 public class Display extends Thread {
     private JFrame frame;
     private Input input;
@@ -100,7 +111,7 @@ public class Display extends Thread {
 
         if (autostart)
             this.start();
-        credtis();
+        //credtis();
     }
 
     public Input getInput(){
