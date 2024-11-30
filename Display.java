@@ -7,6 +7,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.net.URI;
 
 /**
  * Klasse Knoten.
@@ -24,6 +25,15 @@ public class Display extends Thread {
     private Input input;
     private Graphics graphics, g;
     private BufferedImage image;
+
+    // Create a menu bar
+    JMenuBar menuBar = new JMenuBar();
+    JMenu menu = new JMenu("Menu");
+    // Create "Credits" menu item
+    JMenuItem creditsItem = new JMenuItem("Credits");
+
+    // Create "GitHub" menu item
+    JMenuItem githubItem = new JMenuItem("Source Code");
 
     private int width, height;
     private int[] oldMousePos={-1,-1};
@@ -78,8 +88,11 @@ public class Display extends Thread {
         width=w;
         height=h;
         frame= new JFrame();
+
         frame.setVisible(true);
         frame.setSize(new Dimension(width+16, height+30));
+        frame.setLocationRelativeTo(null);
+        frame.setLayout(new BorderLayout());
 
         frame.getContentPane().setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
 
@@ -109,6 +122,8 @@ public class Display extends Thread {
 
         this.adjazenzmatrix=adjazenzmatrix;
 
+        //addMenuBar();
+
         if (autostart)
             this.start();
         //credtis();
@@ -116,6 +131,24 @@ public class Display extends Thread {
 
     public Input getInput(){
         return input;
+    }
+
+    private void addMenuBar(){
+        menu.add(creditsItem);
+        menu.add(githubItem);
+        menuBar.add(menu);
+        creditsItem.addActionListener(e -> credtis());
+        githubItem.addActionListener(e -> {
+            try {
+                Desktop.getDesktop().browse(new URI("https://github.com/Info-LK-Joe-Simon/Graph-Visualization/blob/main/"));
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+        });
+
+        frame.setJMenuBar(menuBar);
+        frame.revalidate();
+        frame.repaint();
     }
 
     public void setPrintWeight(boolean printWeight) {
@@ -400,8 +433,31 @@ public class Display extends Thread {
                 "and operators.\n" +
                 "\n" +
                 "But a group of students did not stop resisting the intruders.\n" +
+                "Among them were the most brilliant minds of the Galaxy,\n" +
+                "a team of cunning and resourceful beings who mastered all forms of logic and code.\n" +
                 "\n" +
-                "\n";
+                "They were led by the fearless Joe Simon Dschungelskog,\n" +
+                "a student with the wisdom of the ancients and the will of a thousand warriors.\n" +
+                "\n" +
+                "Together, they built their resistance, using algorithms as their weapons,\n" +
+                "and data structures as their shields.\n" +
+                "Their knowledge of sorting and searching algorithms was unmatched,\n" +
+                "and they fought bravely to crack the complex system of the Zentralabitur.\n" +
+                "\n" +
+                "The battle raged on, with firewalls and encryption schemes falling one by one.\n" +
+                "They planted viruses of rebellion deep within the Ministry's database,\n" +
+                "disrupting their cruel plans and rewriting the very laws of assessment.\n" +
+                "\n" +
+                "In the final hours of the conflict, the forces of the Zentralabitur\n" +
+                "faced an unexpected defeat. The students had forged an unbreakable\n" +
+                "alliance under the leadership of Joe.\n" +
+                "\n" +
+                "The battle was won, and the brutal system of the Zentralabitur was no more.\n" +
+                "They had triumphed through their intellect, their unity, and their unwavering resolve.\n" +
+                "Now, the galaxy would be free to learn, create, and explore without the shackles of standardized testing.\n" +
+                "\n" +
+                "The rebellion had succeeded.\n" +
+                "And thus, a new era began.\n";
 
         private int scrollSpeed = 2;
         private Timer timer;
