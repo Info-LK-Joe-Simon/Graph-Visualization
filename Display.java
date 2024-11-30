@@ -454,7 +454,8 @@ public class Display extends Thread {
                 "\n" +
                 "The battle was won, and the brutal system of the Zentralabitur was no more.\n" +
                 "They had triumphed through their intellect, their unity, and their unwavering resolve.\n" +
-                "Now, the galaxy would be free to learn, create, and explore without the shackles of standardized testing.\n" +
+                "Now, the galaxy would be free to learn, create,\n" +
+                "and explore without the shackles of standardized testing.\n" +
                 "\n" +
                 "The rebellion had succeeded.\n" +
                 "And thus, a new era began.\n";
