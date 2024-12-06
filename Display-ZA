@@ -5,24 +5,15 @@ import java.awt.image.BufferedImage;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
 import java.net.URI;
-import java.net.URL;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * Klasse Knoten.
  * für die Darstellungen eines Graphen mittels Adjazenzmatrix
- * auf der Basis des Programms von O.Zimmermann (Benötigt mindestens die Klasse Knoten)
+ * auf der Basis des Programms von O.Zimmermann für das Zentralabitur (Benötigt die Vertex Klasse des Zentralabiturs)
  *
  * @author F.Paul & J.S.Dschungelskog
- * @version 1.0.1
+ * @version 1.0
  *
  * @source https://github.com/Info-LK-Joe-Simon/Graph-Visualization
  */
@@ -51,7 +42,7 @@ public class Display extends Thread {
     private int[] listByLeastConncection;
 
     private Knot[] knots;
-    private Knoten[] knoten=null;
+    private Vertex[] knoten=null;
 
     private boolean undecorated=false;
     private boolean darkmode=false;
@@ -92,7 +83,6 @@ public class Display extends Thread {
         initilize(800, 600, adjazenzmatrix,true);
     }
     public void initilize(int w, int h, double[][] adjazenzmatrix, boolean autostart){
-        VersionChecker.check_version();
         width=w;
         height=h;
         frame= new JFrame();
@@ -222,7 +212,7 @@ public class Display extends Thread {
         else if(knoten[i]==null)
             knots[i]=new Knot(pos, name, marked);
         else
-            knots[i]=new Knot(pos, knoten[i].getBezeichnung(), knoten[i].getMarkierung());
+            knots[i]=new Knot(pos, knoten[i].getID(), knoten[i].isMarked());
     }
 
     private float[] getKnotPos(double[][] a, int i){
@@ -380,11 +370,11 @@ public class Display extends Thread {
         return decimalPlaces;
     }
 
-    public void setKnoten(Knoten[] k){
+    public void setKnoten(Vertex[] k){
         knoten=k;
     }
 
-    public Knoten[] getKnoten(){
+    public Vertex[] getKnoten(){
         return knoten;
     }
 
@@ -401,8 +391,8 @@ public class Display extends Thread {
     }
 
     public void markKnot(int index, boolean marked){
-        if(knoten!=null&&knoten[index]!=null&&marked) //Unfortunately, there is no option to demark a knot in O.Zimmermanns Knoten.
-            knoten[index].setMarkierung();
+        if(knoten!=null&&knoten[index]!=null&&marked)
+            knoten[index].setMark(marked);
         if(knots==null) {
             System.out.println("Warning: Knots array is null. If this is unexpected, try waiting for the thread to initialize. :)");
             return;
@@ -516,26 +506,7 @@ public class Display extends Thread {
     }
 
     class CreditsPanel extends JPanel {
-        private class Star{
-            private double[] velocity = new double[2];
-            private double[] pos = new double[2];
-            public Star(double speed_factor){
-                velocity[0]=(Math.random()-0.5)*speed_factor;
-                velocity[1]=(Math.random()-0.5)*speed_factor;
-                pos[0]=0.5;
-                pos[1]=0.5;
-            }
-            public void update(){
-                pos[0]+=velocity[0];
-                pos[1]+=velocity[1];
-                if(pos[0]<0||pos[0]>1||pos[1]<0||pos[1]>1){
-                    pos[0]=0.5;
-                    pos[1]=0.5;
-                }
-            }
-        }
-        private int num_of_stars=100;
-        private Star[] stars = new Star[num_of_stars];
+
         private String monologue = "GRAPH\n" +
                 "WARS\n" +
                 "\n" +
@@ -584,8 +555,6 @@ public class Display extends Thread {
             frame=f;
             setFont(new Font("Arial", Font.PLAIN, 20));
             this.grabFocus();
-            for(int i=0; i<num_of_stars; i++)
-                stars[i]=new Star(0.01);
         }
 
         public void startAnimation() {
@@ -593,8 +562,6 @@ public class Display extends Thread {
                 @Override
                 public void actionPerformed(ActionEvent e) {
                     yOffset -= scrollSpeed;
-                    for(int i=0; i<num_of_stars; i++)
-                        stars[i].update();
                     repaint();
                 }
             });
@@ -606,11 +573,6 @@ public class Display extends Thread {
             super.paintComponent(g);
 
             Graphics2D g2d = (Graphics2D) g;
-
-            g2d.setColor(Color.WHITE);
-            for(int i=0; i<num_of_stars; i++)
-                g2d.drawLine((int)(stars[i].pos[0]*800), (int)(stars[i].pos[1]*600), (int)(stars[i].pos[0]*800), (int)(stars[i].pos[1]*600));
-
             g2d.setColor(getForeground());
 
             String[] monologue_array=monologue.split("\n");
@@ -661,68 +623,5 @@ public class Display extends Thread {
             MenuWindow settingsWindow = new MenuWindow(this);
             settingsWindow.setVisible(true);
         });
-    }
-
-    //Check for latest version
-    public class VersionChecker {
-        public static void check_version() {
-            String localFilePath = "./src/Display.java";
-            String githubFileUrl = "https://github.com/Info-LK-Joe-Simon/Graph-Visualization/blob/main/Display.java";
-
-            try {
-                String localVersion = extractVersionFromLocalFile(localFilePath);
-                String githubVersion = fetchFileVersionFromGithub(githubFileUrl);
-
-                //Compare versions
-                if (localVersion == null) {
-                    System.out.println("Could not find @version in the local file.");
-                    return;
-                }
-                if (githubVersion == null) {
-                    System.out.println("Could not find @version in the header.");
-                } else if (localVersion.equals(githubVersion)) {
-                    System.out.println("Version is up-to-date: " + localVersion);
-                } else {
-                    System.out.println("Version mismatch! Local: " + localVersion + ", GitHub: " + githubVersion +"\nPLEASE UPDATE");
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-                System.out.println("Failed to check version.");
-            }
-        }
-        // Extract the @version field from a file on the local system
-        private static String extractVersionFromLocalFile(String filePath) throws Exception {
-            BufferedReader reader = new BufferedReader(new FileReader(filePath));
-            StringBuilder content = new StringBuilder();
-            String line;
-
-            while ((line = reader.readLine()) != null)
-                content.append(line).append("\n");
-            reader.close();
-
-            return extractVersionFromHeader(content.toString());
-        }
-        // Extract the @version field from a file on github
-        private static String fetchFileVersionFromGithub(String fileUrl) throws Exception {
-            URL url = new URL(fileUrl);
-            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-            connection.setRequestMethod("GET");
-
-            BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
-            StringBuilder content = new StringBuilder();
-            String inputLine;
-            while ((inputLine = in.readLine()) != null)
-                content.append(inputLine);
-            in.close();
-
-            return extractVersionFromHeader(content.toString()); // Return file content
-        }
-        // Extract the @version field from the header comment
-        private static String extractVersionFromHeader(String content) {
-            // Regex to find @version followed by a version number
-            Pattern versionPattern = Pattern.compile("@version\\s+([\\d.]+)");
-            Matcher matcher = versionPattern.matcher(content);
-            return matcher.find()?matcher.group(1):null;
-        }
     }
 }
