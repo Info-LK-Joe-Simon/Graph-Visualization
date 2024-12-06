@@ -22,7 +22,7 @@ import java.util.regex.Pattern;
  * auf der Basis des Programms von O.Zimmermann (Benötigt mindestens die Klasse Knoten)
  *
  * @author F.Paul & J.S.Dschungelskog
- * @version 1.0.1
+ * @version 1.0.2
  *
  * @source https://github.com/Info-LK-Joe-Simon/Graph-Visualization
  */
@@ -516,7 +516,26 @@ public class Display extends Thread {
     }
 
     class CreditsPanel extends JPanel {
-
+        private class Star{
+            private double[] velocity = new double[2];
+            private double[] pos = new double[2];
+            public Star(double speed_factor){
+                velocity[0]=(Math.random()-0.5)*speed_factor;
+                velocity[1]=(Math.random()-0.5)*speed_factor;
+                pos[0]=0.5;
+                pos[1]=0.5;
+            }
+            public void update(){
+                pos[0]+=velocity[0];
+                pos[1]+=velocity[1];
+                if(pos[0]<0||pos[0]>1||pos[1]<0||pos[1]>1){
+                    pos[0]=0.5;
+                    pos[1]=0.5;
+                }
+            }
+        }
+        private int num_of_stars=100;
+        private Star[] stars = new Star[num_of_stars];
         private String monologue = "GRAPH\n" +
                 "WARS\n" +
                 "\n" +
@@ -553,9 +572,9 @@ public class Display extends Thread {
                 "The rebellion had succeeded.\n" +
                 "And thus, a new era began.\n";
 
-        private int scrollSpeed = 2;
+        private float scrollSpeed = 1.5F;
         private Timer timer;
-        private int yOffset;
+        private float yOffset;
 
         private JFrame frame;
 
@@ -565,6 +584,8 @@ public class Display extends Thread {
             frame=f;
             setFont(new Font("Arial", Font.PLAIN, 20));
             this.grabFocus();
+            for(int i=0; i<num_of_stars; i++)
+                stars[i]=new Star(0.01);
         }
 
         public void startAnimation() {
@@ -572,6 +593,8 @@ public class Display extends Thread {
                 @Override
                 public void actionPerformed(ActionEvent e) {
                     yOffset -= scrollSpeed;
+                    for(int i=0; i<num_of_stars; i++)
+                        stars[i].update();
                     repaint();
                 }
             });
@@ -583,6 +606,11 @@ public class Display extends Thread {
             super.paintComponent(g);
 
             Graphics2D g2d = (Graphics2D) g;
+
+            g2d.setColor(Color.WHITE);
+            for(int i=0; i<num_of_stars; i++)
+                g2d.drawLine((int)(stars[i].pos[0]*getWidth()), (int)(stars[i].pos[1]*getHeight()), (int)(stars[i].pos[0]*getWidth()), (int)(stars[i].pos[1]*getHeight()));
+
             g2d.setColor(getForeground());
 
             String[] monologue_array=monologue.split("\n");
