@@ -27,10 +27,7 @@ public class Display extends Thread {
     // Create a menu bar
     JMenuBar menuBar = new JMenuBar();
     JMenu menu = new JMenu("Menu");
-    // Create "Credits" menu item
     JMenuItem creditsItem = new JMenuItem("Credits");
-
-    // Create "GitHub" menu item
     JMenuItem githubItem = new JMenuItem("Source Code");
 
     private int width, height;
@@ -47,6 +44,7 @@ public class Display extends Thread {
     private Knot[] knots;
     private Knoten[] knoten=null;
 
+    private boolean undecorated=false;
     private boolean darkmode=true;
     private Color c_white=Color.WHITE;
 
@@ -89,10 +87,15 @@ public class Display extends Thread {
         height=h;
         frame= new JFrame();
 
-        frame.setVisible(true);
+        //Interesting to play with you might set undecorated to true like:
+        //undecorated=true;
+        frame.setUndecorated(undecorated);
+
         frame.setSize(new Dimension(width+16, height+30));
         frame.setLocationRelativeTo(null);
         frame.setLayout(new BorderLayout());
+
+        frame.setVisible(true);
 
         frame.getContentPane().setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
 
@@ -118,6 +121,7 @@ public class Display extends Thread {
         image=new BufferedImage(width, height, BufferedImage.TYPE_3BYTE_BGR);
         graphics= image.getGraphics();
         graphics.setColor(darkmode?c_white:c_black);
+        graphics.fillRect(0,0,image.getWidth(), image.getHeight());
         graphics.setFont(new Font("Arial", Font.PLAIN, 32));
 
         this.adjazenzmatrix=adjazenzmatrix;
@@ -127,16 +131,19 @@ public class Display extends Thread {
         if (autostart)
             this.start();
         //credtis();
+        openSettingsWindow();
     }
 
     public Input getInput(){
         return input;
     }
 
-    private void addMenuBar(){
+
+    private void addMenuBar(JFrame f) {
         menu.add(creditsItem);
         menu.add(githubItem);
         menuBar.add(menu);
+
         creditsItem.addActionListener(e -> credtis());
         githubItem.addActionListener(e -> {
             try {
@@ -145,9 +152,16 @@ public class Display extends Thread {
                 ex.printStackTrace();
             }
         });
+        f.setJMenuBar(menuBar);
+        f.revalidate();
+        f.repaint();
+    }
 
-        frame.setJMenuBar(menuBar);
-        frame.revalidate();
+    public void switchToDarkMde() {
+        darkmode = !darkmode;
+        frame.getContentPane().setBackground(darkmode ? c_black : c_white);
+        graphics.setColor(darkmode ? c_white : c_black);
+        g.setColor(darkmode ? c_white : c_black);
         frame.repaint();
     }
 
@@ -298,6 +312,8 @@ public class Display extends Thread {
         updatePos();
         image=new BufferedImage(width, height, BufferedImage.TYPE_3BYTE_BGR);
         graphics= image.getGraphics();
+        graphics.setColor(darkmode?c_black:c_white);
+        graphics.fillRect(0,0,image.getWidth(), image.getHeight());
     }
 
     private void updateSize(){
@@ -396,7 +412,6 @@ public class Display extends Thread {
             if(input.getKey(KeyEvent.VK_ESCAPE))
                 executeOrder66();
         }
-
     }
 
     private void executeOrder66() {System.exit(0);}
@@ -451,7 +466,7 @@ public class Display extends Thread {
     public void credtis() {
         SwingUtilities.invokeLater(() -> {
             JFrame frame = new JFrame("Credits");
-            frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+            //frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
             // Create an instance of the CreditsPanel class
             CreditsPanel creditsPanel = new CreditsPanel(frame);
@@ -561,4 +576,29 @@ public class Display extends Thread {
         }
     }
 
+    public class SettingsWindow extends JFrame {
+        public SettingsWindow(Display display) {
+            setTitle("Settings");
+            setSize(400, 200);
+            setDefaultCloseOperation(undecorated?WindowConstants.EXIT_ON_CLOSE:WindowConstants.DO_NOTHING_ON_CLOSE);
+
+            setLayout(new BorderLayout());
+            addMenuBar(this);
+
+            JCheckBox darkModeCheckbox = new JCheckBox("Enable Dark Mode");
+            darkModeCheckbox.setSelected(display.darkmode);
+            darkModeCheckbox.addActionListener(e -> display.switchToDarkMde());
+
+            JPanel settingsPanel = new JPanel();
+            settingsPanel.add(darkModeCheckbox);
+
+            add(settingsPanel, BorderLayout.CENTER);
+        }
+    }
+    private void openSettingsWindow() {
+        SwingUtilities.invokeLater(() -> {
+            SettingsWindow settingsWindow = new SettingsWindow(this);
+            settingsWindow.setVisible(true);
+        });
+    }
 }
