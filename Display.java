@@ -355,6 +355,14 @@ public class Display extends Thread {
         return decimalPlaces;
     }
 
+    public void setKnoten(Knoten[] k){
+        knoten=k;
+    }
+
+    public Knoten[] getKnoten(){
+        return knoten;
+    }
+
     public void printAdjazenzMatrix() {
         if (adjazenzmatrix == null || adjazenzmatrix.length == 0) {
             System.out.println("The adjacency matrix is empty.");
