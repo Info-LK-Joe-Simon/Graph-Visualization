@@ -363,6 +363,18 @@ public class Display extends Thread {
         return knoten;
     }
 
+    public void changeKnotenName(int index, String name){
+        if(knots==null) {
+            System.out.println("Warning: Knots array is null. If this is unexpected, try waiting for the thread to initialize. :)");
+            return;
+        }
+        if(index<knots.length)
+            knots[index].name=name;
+        else
+            System.out.printf("Error: Attempted to access index %d, but it is out of bounds of Knots. Valid indices are between 0 and %d.%n", index, knots.length - 1);
+
+    }
+
     public void printAdjazenzMatrix() {
         if (adjazenzmatrix == null || adjazenzmatrix.length == 0) {
             System.out.println("The adjacency matrix is empty.");
