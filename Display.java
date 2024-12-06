@@ -45,14 +45,14 @@ public class Display extends Thread {
     private Knoten[] knoten=null;
 
     private boolean undecorated=false;
-    private boolean darkmode=true;
+    private boolean darkmode=false;
     private Color c_white=Color.WHITE;
 
     private Color c_black=Color.BLACK;
 
     private Color c_orange=Color.ORANGE;
 
-    private Color c_red=Color.RED;
+    private Color c_green=Color.GREEN;
 
     private float knot_radius=25;
     private Knot currentDraggedKnot=null;
@@ -131,7 +131,7 @@ public class Display extends Thread {
         if (autostart)
             this.start();
         //credtis();
-        openSettingsWindow();
+        openMenuWindow();
     }
 
     public Input getInput(){
@@ -201,18 +201,18 @@ public class Display extends Thread {
             knots = new Knot[a.length];
         for(int i=0; i<a.length; i++){
             if(knots[i]==null)
-                prepareKnot(a, Integer.toString(i), i);
+                prepareKnot(a, Integer.toString(i), false, i);
         }
     }
 
-    private void prepareKnot(double[][] a, String name, int i){
+    private void prepareKnot(double[][] a, String name, boolean marked, int i){
         float[] pos = getKnotPos(a, i);
         if(knoten==null)
-            knots[i]=new Knot(pos, name);
+            knots[i]=new Knot(pos, name, marked);
         else if(knoten[i]==null)
-            knots[i]=new Knot(pos, name);
+            knots[i]=new Knot(pos, name, marked);
         else
-            knots[i]=new Knot(pos, knoten[i].getBezeichnung());
+            knots[i]=new Knot(pos, knoten[i].getBezeichnung(), knoten[i].getMarkierung());
     }
 
     private float[] getKnotPos(double[][] a, int i){
@@ -256,10 +256,9 @@ public class Display extends Thread {
     }
 
     private void drawKnot(int i){
-        graphics.setColor(darkmode?c_white:c_black);
+        graphics.setColor(knots[i].marked?(darkmode ? c_green : c_orange):darkmode?c_white:c_black);
         graphics.fillOval((int)(knots[i].getX()-knot_radius+pos[0]),(int)(knots[i].getY()-knot_radius+pos[1]),(int)(knot_radius*2),(int)(knot_radius*2));
-
-        graphics.setColor((fillKnots?darkmode:!darkmode)?c_white:c_black);
+        graphics.setColor(knots[i].marked?((fillKnots?darkmode:!darkmode) ? c_green : c_orange):(fillKnots?darkmode:!darkmode)?c_white:c_black);
         graphics.fillOval((int)(knots[i].getX()-(knot_radius-1)+pos[0]),(int)(knots[i].getY()-(knot_radius-1)+pos[1]),(int)((knot_radius-1)*2),(int)((knot_radius-1)*2));
 
         graphics.setColor((fillKnots?!darkmode:darkmode)?c_white:c_black);
@@ -280,7 +279,7 @@ public class Display extends Thread {
         if(adjazenzmatrix[i][j] >= 0 && adjazenzmatrix[j][i] >= 0)
             graphics.setColor(darkmode ? c_white : c_black);
         else if(adjazenzmatrix[i][j] < 0 || adjazenzmatrix[j][i] < 0)
-            graphics.setColor(darkmode ? c_red : c_orange);
+            graphics.setColor(darkmode ? c_green : c_orange);
         graphics.drawLine((int) (knots[i].getX()+pos[0]), (int) (knots[i].getY()+pos[1]), (int) (knots[j].getX()+pos[0]), (int) (knots[j].getY()+pos[1]));
 
         if(!printWeight)
@@ -379,13 +378,27 @@ public class Display extends Thread {
         return knoten;
     }
 
-    public void changeKnotenName(int index, String name){
+    public void changeKnotName(int index, String name){
         if(knots==null) {
             System.out.println("Warning: Knots array is null. If this is unexpected, try waiting for the thread to initialize. :)");
             return;
         }
         if(index<knots.length)
-            knots[index].name=name;
+            knots[index].setName(name);
+        else
+            System.out.printf("Error: Attempted to access index %d, but it is out of bounds of Knots. Valid indices are between 0 and %d.%n", index, knots.length - 1);
+
+    }
+
+    public void markKnot(int index, boolean marked){
+        if(knoten!=null&&knoten[index]!=null&&marked) //Unfortunately, there is no option to demark a knot in O.Zimmermanns Knoten.
+            knoten[index].setMarkierung();
+        if(knots==null) {
+            System.out.println("Warning: Knots array is null. If this is unexpected, try waiting for the thread to initialize. :)");
+            return;
+        }
+        if(index<knots.length)
+            knots[index].setMarked(marked);
         else
             System.out.printf("Error: Attempted to access index %d, but it is out of bounds of Knots. Valid indices are between 0 and %d.%n", index, knots.length - 1);
 
@@ -426,9 +439,11 @@ public class Display extends Thread {
     public class Knot{
         private float[] pos = new float[2];
         private String name="";
-        public Knot(float[] pos, String name){
+        private boolean marked=false;
+        public Knot(float[] pos, String name, boolean marked){
             this.pos=pos;
             this.name=name;
+            this.marked=marked;
         }
 
         public void setPos(float[] pos) {
@@ -446,6 +461,10 @@ public class Display extends Thread {
             this.name = name;
         }
 
+        public void setMarked(boolean marked) {
+            this.marked = marked;
+        }
+
         public float[] getPos() {
             return pos;
         }
@@ -459,6 +478,10 @@ public class Display extends Thread {
 
         public String getName() {
             return name;
+        }
+
+        public boolean getMarked() {
+            return marked;
         }
     }
 
@@ -576,9 +599,9 @@ public class Display extends Thread {
         }
     }
 
-    public class SettingsWindow extends JFrame {
-        public SettingsWindow(Display display) {
-            setTitle("Settings");
+    public class MenuWindow extends JFrame {
+        public MenuWindow(Display display) {
+            setTitle("Menu");
             setSize(400, 200);
             setDefaultCloseOperation(undecorated?WindowConstants.EXIT_ON_CLOSE:WindowConstants.DO_NOTHING_ON_CLOSE);
 
@@ -595,9 +618,9 @@ public class Display extends Thread {
             add(settingsPanel, BorderLayout.CENTER);
         }
     }
-    private void openSettingsWindow() {
+    private void openMenuWindow() {
         SwingUtilities.invokeLater(() -> {
-            SettingsWindow settingsWindow = new SettingsWindow(this);
+            MenuWindow settingsWindow = new MenuWindow(this);
             settingsWindow.setVisible(true);
         });
     }
