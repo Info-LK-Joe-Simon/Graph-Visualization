@@ -3,8 +3,6 @@ import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.awt.image.BufferedImage;
 
-import javax.swing.*;
-import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.net.URI;
@@ -41,8 +39,8 @@ public class Display extends Thread {
     private double[] pos={0.0,0.5};
 
     private double zoom=1.0;
-    private int[][] adjazenzmatrix;
-    private int[][] laplacematrix;
+    private double[][] adjazenzmatrix;
+    private double[][] laplacematrix;
 
     private int[] listByLeastConncection;
 
@@ -65,6 +63,8 @@ public class Display extends Thread {
 
     private boolean fillKnots=true;
 
+    private int decimalPlaces = 2;
+
     public Display(int w, int h, boolean autostart){
         initilize(w, h, null, autostart);
     }
@@ -75,16 +75,16 @@ public class Display extends Thread {
         initilize(800, 600, null,true);
     }
 
-    public Display(int w, int h, int[][] adjazenzmatrix, boolean autostart){
+    public Display(int w, int h, double[][] adjazenzmatrix, boolean autostart){
         initilize(w, h, adjazenzmatrix, autostart);
     }
-    public Display(int w, int h, int[][] adjazenzmatrix){
+    public Display(int w, int h, double[][] adjazenzmatrix){
         initilize(w, h, adjazenzmatrix,true);
     }
-    public Display(int[][] adjazenzmatrix){
+    public Display(double[][] adjazenzmatrix){
         initilize(800, 600, adjazenzmatrix,true);
     }
-    public void initilize(int w, int h, int[][] adjazenzmatrix, boolean autostart){
+    public void initilize(int w, int h, double[][] adjazenzmatrix, boolean autostart){
         width=w;
         height=h;
         frame= new JFrame();
@@ -163,10 +163,10 @@ public class Display extends Thread {
 
     public boolean getFillKnots(){return fillKnots;}
 
-    private int[][] getLaplaceMatrix(int[][] a){
+    private double[][] getLaplaceMatrix(double[][] a){
         if(laplacematrix!=null)
             return laplacematrix;
-        laplacematrix=new int[a.length][a[0].length];
+        laplacematrix=new double[a.length][a[0].length];
         for(int i=0; i<a.length; i++) {
             int numOfConnections=0;
             for (int j=0; j < a.length; j++) {
@@ -175,12 +175,11 @@ public class Display extends Thread {
                 laplacematrix[i][j]=a[i][j];
             }
             laplacematrix[i][i]=numOfConnections;
-            System.out.println(String.format("%d : %d", i, laplacematrix[i][i]));
         }
         return laplacematrix;
     }
 
-    private void prepareKnots(int[][] a){
+    private void prepareKnots(double[][] a){
         laplacematrix=getLaplaceMatrix(a);
         if(knots==null)
             knots = new Knot[a.length];
@@ -192,7 +191,7 @@ public class Display extends Thread {
         }
     }
 
-    private void prepareKnot(int[][] a, String name, int i){
+    private void prepareKnot(double[][] a, String name, int i){
         float[] pos = getKnotPos(a, i);
         if(knoten==null)
             knots[i]=new Knot(pos, name);
@@ -202,7 +201,7 @@ public class Display extends Thread {
             knots[i]=new Knot(pos, knoten[i].getBezeichnung());
     }
 
-    private float[] getKnotPos(int[][] a, int i){
+    private float[] getKnotPos(double[][] a, int i){
         float[] pos=new float[2];
         int length=a.length;
         if(length%2==0){
@@ -232,7 +231,7 @@ public class Display extends Thread {
         swapBuffers();
     }
 
-    private void drawGraph(int[][] a){
+    private void drawGraph(double[][] a){
         for(int i=0; i < knots.length; i++)
             for (int j = 0; j < adjazenzmatrix.length; j++)
                 if (adjazenzmatrix[i][j] != 0)
@@ -282,13 +281,13 @@ public class Display extends Thread {
 
         if(i<=j)
             if(Math.abs(adjazenzmatrix[i][j])==Math.abs(adjazenzmatrix[j][i])) {
-                String weight = Integer.toString(Math.abs(adjazenzmatrix[i][j]));
+                String weight = Double.toString(Math.abs(roundToDecimalPlaces(adjazenzmatrix[i][j], decimalPlaces)));
                 int weightWidth = fontMetrics.stringWidth(weight);
                 int weightHeight = fontMetrics.getHeight();
                 graphics.drawString(weight, midX, midY - weightHeight/2);
             }
             else{
-                String weight = (adjazenzmatrix[i][j]==0?"":"-> "+Math.abs(adjazenzmatrix[i][j]))+((adjazenzmatrix[i][j]==0||adjazenzmatrix[j][i]==0)?"":" | ")+(adjazenzmatrix[j][i]==0?"":"<- "+Math.abs(adjazenzmatrix[j][i]));
+                String weight = (adjazenzmatrix[i][j] == 0 ? "" : "-> " + Math.abs(roundToDecimalPlaces(adjazenzmatrix[i][j], decimalPlaces))) + ((adjazenzmatrix[i][j] == 0 || adjazenzmatrix[j][i] == 0) ? "" : " | ") + (adjazenzmatrix[j][i] == 0 ? "" : "<- " + Math.abs(roundToDecimalPlaces(adjazenzmatrix[j][i], decimalPlaces)));
                 int weightWidth = fontMetrics.stringWidth(weight);
                 int weightHeight = fontMetrics.getHeight();
                 graphics.drawString(weight, midX, midY - weightHeight / 2);
@@ -348,6 +347,13 @@ public class Display extends Thread {
         frame.getContentPane().setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
     }
 
+    public void setDecimalPlaces (int dp){
+        decimalPlaces=dp;
+    }
+
+    public int getDecimalPlaces (){
+        return decimalPlaces;
+    }
 
     public void run(){
         while (true) {
@@ -360,8 +366,12 @@ public class Display extends Thread {
 
     private void executeOrder66() {System.exit(0);}
 
-    public void setAdjazenzmatrix(int[][] a){adjazenzmatrix=a;}
-    public int[][] getAdjazenzmatrix(){return adjazenzmatrix;}
+    public void setAdjazenzmatrix(double[][] a){adjazenzmatrix=a;}
+    public double[][] getAdjazenzmatrix(){return adjazenzmatrix;}
+    private static double roundToDecimalPlaces(double value, int decimalPlaces) {
+        double factor = Math.pow(10, decimalPlaces);
+        return Math.round(value * factor) / factor;
+    }
 
     public class Knot{
         private float[] pos = new float[2];
