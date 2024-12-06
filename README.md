@@ -4,5 +4,7 @@ Graph Visualization in Java for Info LK
 
 # TO DO
 Make the weighting of the edges readable from left to right rather than from smaller to larger.
+
 Mark nodes.
+
 Settings Window.
