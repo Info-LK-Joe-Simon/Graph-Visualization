@@ -234,7 +234,7 @@ public class Display extends Thread {
     private void drawGraph(double[][] a){
         for(int i=0; i < knots.length; i++)
             for (int j = 0; j < adjazenzmatrix.length; j++)
-                if (adjazenzmatrix[i][j] != 0)
+                if (adjazenzmatrix[i][j] != 0 || adjazenzmatrix[j][i] != 0)
                     drawLineBetweenKnots(i, j);
         for(int i=0; i < knots.length; i++){
             drawKnot(i);
@@ -353,6 +353,21 @@ public class Display extends Thread {
 
     public int getDecimalPlaces (){
         return decimalPlaces;
+    }
+
+    public void printAdjazenzMatrix() {
+        if (adjazenzmatrix == null || adjazenzmatrix.length == 0) {
+            System.out.println("The adjacency matrix is empty.");
+            return;
+        }
+
+        System.out.println("Adjacency Matrix:");
+        for (int i = 0; i < adjazenzmatrix.length; i++) {
+            for (int j = 0; j < adjazenzmatrix[i].length; j++) {
+                System.out.print(adjazenzmatrix[i][j] + "\t");
+            }
+            System.out.println();
+        }
     }
 
     public void run(){
