@@ -11,15 +11,15 @@ public class Main {
             }
         }
         Display d=new Display(800, 800, adjMat/*g.getAdjMatrix()*/);
-        
         //Example for renaming
         try {
-            Thread.sleep(100);    //Ensure the thread has initialized properly before proceeding
+            Thread.sleep(100);
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
-        d.changeKnotenName(0, "Example");
-        
+        //Examples for renaming and marking knots
+        d.changeKnotName(0, "Example");
+        d.markKnot(0, true);
         //d.setFillKnots(true);
         //d.setPrintWeight(false);
     }
