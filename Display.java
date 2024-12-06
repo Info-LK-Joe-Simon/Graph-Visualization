@@ -5,7 +5,16 @@ import java.awt.image.BufferedImage;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
 import java.net.URI;
+import java.net.URL;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Klasse Knoten.
@@ -13,7 +22,7 @@ import java.net.URI;
  * auf der Basis des Programms von O.Zimmermann (Benötigt mindestens die Klasse Knoten)
  *
  * @author F.Paul & J.S.Dschungelskog
- * @version 1.0
+ * @version 1.0.1
  *
  * @source https://github.com/Info-LK-Joe-Simon/Graph-Visualization
  */
@@ -83,6 +92,7 @@ public class Display extends Thread {
         initilize(800, 600, adjazenzmatrix,true);
     }
     public void initilize(int w, int h, double[][] adjazenzmatrix, boolean autostart){
+        VersionChecker.check_version();
         width=w;
         height=h;
         frame= new JFrame();
@@ -623,5 +633,68 @@ public class Display extends Thread {
             MenuWindow settingsWindow = new MenuWindow(this);
             settingsWindow.setVisible(true);
         });
+    }
+
+    //Check for latest version
+    public class VersionChecker {
+        public static void check_version() {
+            String localFilePath = "./src/Display.java";
+            String githubFileUrl = "https://github.com/Info-LK-Joe-Simon/Graph-Visualization/blob/main/Display.java";
+
+            try {
+                String localVersion = extractVersionFromLocalFile(localFilePath);
+                String githubVersion = fetchFileVersionFromGithub(githubFileUrl);
+
+                //Compare versions
+                if (localVersion == null) {
+                    System.out.println("Could not find @version in the local file.");
+                    return;
+                }
+                if (githubVersion == null) {
+                    System.out.println("Could not find @version in the header.");
+                } else if (localVersion.equals(githubVersion)) {
+                    System.out.println("Version is up-to-date: " + localVersion);
+                } else {
+                    System.out.println("Version mismatch! Local: " + localVersion + ", GitHub: " + githubVersion +"\nPLEASE UPDATE");
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+                System.out.println("Failed to check version.");
+            }
+        }
+        // Extract the @version field from a file on the local system
+        private static String extractVersionFromLocalFile(String filePath) throws Exception {
+            BufferedReader reader = new BufferedReader(new FileReader(filePath));
+            StringBuilder content = new StringBuilder();
+            String line;
+
+            while ((line = reader.readLine()) != null)
+                content.append(line).append("\n");
+            reader.close();
+
+            return extractVersionFromHeader(content.toString());
+        }
+        // Extract the @version field from a file on github
+        private static String fetchFileVersionFromGithub(String fileUrl) throws Exception {
+            URL url = new URL(fileUrl);
+            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+            connection.setRequestMethod("GET");
+
+            BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+            StringBuilder content = new StringBuilder();
+            String inputLine;
+            while ((inputLine = in.readLine()) != null)
+                content.append(inputLine);
+            in.close();
+
+            return extractVersionFromHeader(content.toString()); // Return file content
+        }
+        // Extract the @version field from the header comment
+        private static String extractVersionFromHeader(String content) {
+            // Regex to find @version followed by a version number
+            Pattern versionPattern = Pattern.compile("@version\\s+([\\d.]+)");
+            Matcher matcher = versionPattern.matcher(content);
+            return matcher.find()?matcher.group(1):null;
+        }
     }
 }
