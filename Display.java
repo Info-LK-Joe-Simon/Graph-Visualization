@@ -11,8 +11,7 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URI;
 import java.net.URL;
-import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -22,7 +21,7 @@ import java.util.regex.Pattern;
  * auf der Basis des Programms von O.Zimmermann (Benötigt mindestens die Klasse Knoten)
  *
  * @author F.Paul & J.S.Dschungelskog
- * @version 1.0.2
+ * @version 1.0.3
  *
  * @source https://github.com/Info-LK-Joe-Simon/Graph-Visualization
  */
@@ -35,9 +34,12 @@ public class Display extends Thread {
 
     // Create a menu bar
     JMenuBar menuBar = new JMenuBar();
-    JMenu menu = new JMenu("Menu");
-    JMenuItem creditsItem = new JMenuItem("Credits");
-    JMenuItem githubItem = new JMenuItem("Source Code");
+    JMenu knotMenuBar = new JMenu("Knot");
+    JMenuItem knotMarkItem = new JMenuItem("MarkKnot");
+    JMenuItem knotUnmarkItem = new JMenuItem("UnmarkKnot");
+    JMenu aboutMenuBar = new JMenu("About");
+    JMenuItem aboutCreditsItem = new JMenuItem("Credits");
+    JMenuItem aboutGithubItem = new JMenuItem("Source Code");
 
     private int width, height;
     private int[] oldMousePos={-1,-1};
@@ -55,16 +57,17 @@ public class Display extends Thread {
 
     private boolean undecorated=false;
     private boolean darkmode=false;
+
     private Color c_white=Color.WHITE;
-
     private Color c_black=Color.BLACK;
-
     private Color c_orange=Color.ORANGE;
-
     private Color c_green=Color.GREEN;
+    private Color c_magenta=Color.MAGENTA;
 
     private float knot_radius=25;
+    private float selectedKnotRadius=2;
     private Knot currentDraggedKnot=null;
+    private ArrayList<Integer> listOfSelectedKnots = new ArrayList<Integer>();;
 
     private boolean printWeight=true;
 
@@ -92,7 +95,7 @@ public class Display extends Thread {
         initilize(800, 600, adjazenzmatrix,true);
     }
     public void initilize(int w, int h, double[][] adjazenzmatrix, boolean autostart){
-        VersionChecker.check_version();
+        VersionChecker.check_version("./src/Display.java", "https://github.com/Info-LK-Joe-Simon/Graph-Visualization/blob/main/Display.java");
         width=w;
         height=h;
         frame= new JFrame();
@@ -150,18 +153,24 @@ public class Display extends Thread {
 
 
     private void addMenuBar(JFrame f) {
-        menu.add(creditsItem);
-        menu.add(githubItem);
-        menuBar.add(menu);
+        knotMenuBar.add(knotMarkItem);
+        knotMenuBar.add(knotUnmarkItem);
+        knotMarkItem.addActionListener(e -> markKnots(listOfSelectedKnots, true));
+        knotUnmarkItem.addActionListener(e -> markKnots(listOfSelectedKnots, false));
+        menuBar.add(knotMenuBar);
 
-        creditsItem.addActionListener(e -> credtis());
-        githubItem.addActionListener(e -> {
+        aboutCreditsItem.addActionListener(e -> credtis());
+        aboutGithubItem.addActionListener(e -> {
             try {
                 Desktop.getDesktop().browse(new URI("https://github.com/Info-LK-Joe-Simon/Graph-Visualization/blob/main/"));
             } catch (Exception ex) {
                 ex.printStackTrace();
             }
         });
+        aboutMenuBar.add(aboutCreditsItem);
+        aboutMenuBar.add(aboutGithubItem);
+        menuBar.add(aboutMenuBar);
+
         f.setJMenuBar(menuBar);
         f.revalidate();
         f.repaint();
@@ -266,9 +275,13 @@ public class Display extends Thread {
     }
 
     private void drawKnot(int i){
+        if(listOfSelectedKnots.contains(i)) {
+            graphics.setColor(c_magenta);
+            graphics.fillOval((int) (knots[i].getX() - (knot_radius + selectedKnotRadius) + pos[0]), (int) (knots[i].getY() - (knot_radius + selectedKnotRadius) + pos[1]), (int) ((knot_radius + selectedKnotRadius) * 2), (int) ((knot_radius + selectedKnotRadius) * 2));
+        }
         graphics.setColor(knots[i].marked?(darkmode ? c_green : c_orange):darkmode?c_white:c_black);
         graphics.fillOval((int)(knots[i].getX()-knot_radius+pos[0]),(int)(knots[i].getY()-knot_radius+pos[1]),(int)(knot_radius*2),(int)(knot_radius*2));
-        graphics.setColor(knots[i].marked?((fillKnots?darkmode:!darkmode) ? c_green : c_orange):(fillKnots?darkmode:!darkmode)?c_white:c_black);
+        graphics.setColor(fillKnots?knots[i].marked?(darkmode ? c_green : c_orange):darkmode?c_white:c_black:!darkmode?c_white:c_black);
         graphics.fillOval((int)(knots[i].getX()-(knot_radius-1)+pos[0]),(int)(knots[i].getY()-(knot_radius-1)+pos[1]),(int)((knot_radius-1)*2),(int)((knot_radius-1)*2));
 
         graphics.setColor((fillKnots?!darkmode:darkmode)?c_white:c_black);
@@ -310,7 +323,7 @@ public class Display extends Thread {
                 graphics.drawString(weight, midX, midY - weightHeight/2);
             }
             else{
-                String weight = (adjazenzmatrix[i][j] == 0 ? "" : "-> " + Math.abs(roundToDecimalPlaces(adjazenzmatrix[i][j], decimalPlaces))) + ((adjazenzmatrix[i][j] == 0 || adjazenzmatrix[j][i] == 0) ? "" : " | ") + (adjazenzmatrix[j][i] == 0 ? "" : "<- " + Math.abs(roundToDecimalPlaces(adjazenzmatrix[j][i], decimalPlaces)));
+                String weight = (adjazenzmatrix[i][j] == 0 ? "" : (knots[i].getX()>knots[j].getX()?"<- ":"-> ") + Math.abs(roundToDecimalPlaces(adjazenzmatrix[i][j], decimalPlaces))) + ((adjazenzmatrix[i][j] == 0 || adjazenzmatrix[j][i] == 0) ? "" : " | ") + (adjazenzmatrix[j][i] == 0 ? "" : (knots[i].getX()>knots[j].getX()?"-> ":"<- ") + Math.abs(roundToDecimalPlaces(adjazenzmatrix[j][i], decimalPlaces)));
                 int weightWidth = fontMetrics.stringWidth(weight);
                 int weightHeight = fontMetrics.getHeight();
                 graphics.drawString(weight, midX, midY - weightHeight / 2);
@@ -357,7 +370,16 @@ public class Display extends Thread {
             float[] knotPos = knot.getPos();
             float distance = (float) Math.sqrt(Math.pow(oldMousePos[0] - (knotPos[0] + pos[0]), 2) + Math.pow(oldMousePos[1] - (knotPos[1] + pos[1]), 2));
 
-            if ((distance < knot_radius && currentDraggedKnot == null) || currentDraggedKnot == knot) {
+            if ((distance < (listOfSelectedKnots.contains(i)?knot_radius + selectedKnotRadius: knot_radius) && currentDraggedKnot == null) || currentDraggedKnot == knot) {
+                if (listOfSelectedKnots.isEmpty())
+                    listOfSelectedKnots.add(i);
+                if (input.getKey(KeyEvent.VK_SHIFT) || input.getKey(KeyEvent.VK_CONTROL)) {
+                    if (!listOfSelectedKnots.contains(i))
+                        listOfSelectedKnots.add(i);
+                } else {
+                    listOfSelectedKnots.clear();
+                    listOfSelectedKnots.add(i);
+                }
                 currentDraggedKnot=knot;
                 knot.setX((float) (input.getMouseX() - pos[0]));
                 knot.setY((float) (input.getMouseY() - pos[1]));
@@ -366,6 +388,7 @@ public class Display extends Thread {
             }
             i++;
         }
+        listOfSelectedKnots.clear();
         currentDraggedKnot = null;
         pos[0] += (input.getMouseX() - oldMousePos[0]);
         pos[1] += (input.getMouseY() - oldMousePos[1]);
@@ -388,7 +411,7 @@ public class Display extends Thread {
         return knoten;
     }
 
-    public void changeKnotName(int index, String name){
+    public void renameKnot(int index, String name){
         if(knots==null) {
             System.out.println("Warning: Knots array is null. If this is unexpected, try waiting for the thread to initialize. :)");
             return;
@@ -397,6 +420,20 @@ public class Display extends Thread {
             knots[index].setName(name);
         else
             System.out.printf("Error: Attempted to access index %d, but it is out of bounds of Knots. Valid indices are between 0 and %d.%n", index, knots.length - 1);
+
+    }
+
+    public void renameKnots(ArrayList<Integer> indices, String name){
+        for (int index : indices) {
+            renameKnot(index, name);
+        }
+
+    }
+
+    public void renameKnots(int[] indices, String name){
+        for (int index : indices) {
+            renameKnot(index, name);
+        }
 
     }
 
@@ -411,6 +448,20 @@ public class Display extends Thread {
             knots[index].setMarked(marked);
         else
             System.out.printf("Error: Attempted to access index %d, but it is out of bounds of Knots. Valid indices are between 0 and %d.%n", index, knots.length - 1);
+
+    }
+
+    public void markKnots(ArrayList<Integer> indices, boolean marked){
+        for (int index : indices) {
+            markKnot(index, marked);
+        }
+
+    }
+
+    public void markKnots(int[] indices, boolean marked){
+        for (int index : indices) {
+            markKnot(index, marked);
+        }
 
     }
 
@@ -499,6 +550,8 @@ public class Display extends Thread {
     public void credtis() {
         SwingUtilities.invokeLater(() -> {
             JFrame frame = new JFrame("Credits");
+            Image icon = Toolkit.getDefaultToolkit().getImage("./src/DisplayingGraphLogo.png");
+            frame.setIconImage(icon);
             //frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
             // Create an instance of the CreditsPanel class
@@ -639,6 +692,8 @@ public class Display extends Thread {
 
     public class MenuWindow extends JFrame {
         public MenuWindow(Display display) {
+            Image icon = Toolkit.getDefaultToolkit().getImage("./src/DisplayingGraphLogo.png");
+            setIconImage(icon);
             setTitle("Menu");
             setSize(400, 200);
             setDefaultCloseOperation(undecorated?WindowConstants.EXIT_ON_CLOSE:WindowConstants.DO_NOTHING_ON_CLOSE);
@@ -650,10 +705,22 @@ public class Display extends Thread {
             darkModeCheckbox.setSelected(display.darkmode);
             darkModeCheckbox.addActionListener(e -> display.switchToDarkMde());
 
+            JCheckBox fillKnotsCheckbox = new JCheckBox("Fill Knots");
+            fillKnotsCheckbox.setSelected(display.fillKnots);
+            fillKnotsCheckbox.addActionListener(e -> fillKnots=!fillKnots);
+
             JPanel settingsPanel = new JPanel();
             settingsPanel.add(darkModeCheckbox);
+            settingsPanel.add(fillKnotsCheckbox);
 
             add(settingsPanel, BorderLayout.CENTER);
+
+            JLabel footerLabel = new JLabel("<html>This service is brought to you by<br>Joe Simon D. & Fabian P.</html>");
+            footerLabel.setHorizontalAlignment(SwingConstants.LEFT);
+            JPanel footerPanel = new JPanel(new BorderLayout());
+            footerPanel.add(footerLabel, BorderLayout.WEST);
+
+            add(footerPanel, BorderLayout.SOUTH);
         }
     }
     private void openMenuWindow() {
@@ -665,10 +732,7 @@ public class Display extends Thread {
 
     //Check for latest version
     public class VersionChecker {
-        public static void check_version() {
-            String localFilePath = "./src/Display.java";
-            String githubFileUrl = "https://github.com/Info-LK-Joe-Simon/Graph-Visualization/blob/main/Display.java";
-
+        public static void check_version(String localFilePath, String githubFileUrl) {
             try {
                 String localVersion = extractVersionFromLocalFile(localFilePath);
                 String githubVersion = fetchFileVersionFromGithub(githubFileUrl);
