@@ -7,6 +7,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.BufferedReader;
 import java.io.FileReader;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URI;
@@ -21,7 +22,7 @@ import java.util.regex.Pattern;
  * auf der Basis des Programms von O.Zimmermann (Benötigt mindestens die Klasse Knoten)
  *
  * @author F.Paul & J.S.Dschungelskog
- * @version 1.0.3
+ * @version 1.0.3-beta
  *
  * @source https://github.com/Info-LK-Joe-Simon/Graph-Visualization
  */
@@ -31,6 +32,8 @@ public class Display extends Thread {
     private Input input;
     private Graphics graphics, g;
     private BufferedImage image;
+
+    private String versionInfo="";
 
     // Create a menu bar
     JMenuBar menuBar = new JMenuBar();
@@ -95,7 +98,7 @@ public class Display extends Thread {
         initilize(800, 600, adjazenzmatrix,true);
     }
     public void initilize(int w, int h, double[][] adjazenzmatrix, boolean autostart){
-        VersionChecker.check_version("./src/Display.java", "https://github.com/Info-LK-Joe-Simon/Graph-Visualization/blob/main/Display.java");
+        versionInfo=VersionChecker.check_version("./src/Display.java", "https://github.com/Info-LK-Joe-Simon/Graph-Visualization/blob/main/Display.java");
         width=w;
         height=h;
         frame= new JFrame();
@@ -701,6 +704,12 @@ public class Display extends Thread {
             setLayout(new BorderLayout());
             addMenuBar(this);
 
+            JLabel versionLabel = new JLabel(VersionChecker.getVersionInfo());
+            versionLabel.setHorizontalAlignment(SwingConstants.LEFT);
+            JPanel versionPanel = new JPanel(new BorderLayout());
+            versionPanel.add(versionLabel, BorderLayout.WEST);
+            add(versionPanel, BorderLayout.NORTH);
+
             JCheckBox darkModeCheckbox = new JCheckBox("Enable Dark Mode");
             darkModeCheckbox.setSelected(display.darkmode);
             darkModeCheckbox.addActionListener(e -> display.switchToDarkMde());
@@ -732,61 +741,72 @@ public class Display extends Thread {
 
     //Check for latest version
     public class VersionChecker {
-        public static void check_version(String localFilePath, String githubFileUrl) {
+        private static String versionInfo="Version is not checked yet";
+        public static String check_version(String localFilePath, String githubFileUrl) {
+            versionInfo ="";
             try {
                 String localVersion = extractVersionFromLocalFile(localFilePath);
                 String githubVersion = fetchFileVersionFromGithub(githubFileUrl);
 
                 //Compare versions
                 if (localVersion == null) {
-                    System.out.println("Could not find @version in the local file.");
-                    return;
+                    versionInfo ="Could not find @version in the local file.";
+                    System.out.println(versionInfo);
+                    return versionInfo;
                 }
                 if (githubVersion == null) {
-                    System.out.println("Could not find @version in the header.");
+                    versionInfo ="Could not find @version in the header.";
                 } else if (localVersion.equals(githubVersion)) {
-                    System.out.println("Version is up-to-date: " + localVersion);
+                    versionInfo ="Version is up-to-date: " + localVersion;
                 } else {
-                    System.out.println("Version mismatch! Local: " + localVersion + ", GitHub: " + githubVersion +"\nPLEASE UPDATE");
+                    versionInfo ="Version mismatch! Local: " + localVersion + ", GitHub: " + githubVersion +" \nPLEASE UPDATE";
                 }
             } catch (Exception e) {
                 e.printStackTrace();
-                System.out.println("Failed to check version.");
+                versionInfo ="Failed to check version.";
             }
+            System.out.println(versionInfo);
+            return versionInfo;
         }
         // Extract the @version field from a file on the local system
-        private static String extractVersionFromLocalFile(String filePath) throws Exception {
-            BufferedReader reader = new BufferedReader(new FileReader(filePath));
+        private static String extractVersionFromLocalFile(String filePath) throws IOException {
             StringBuilder content = new StringBuilder();
-            String line;
-
-            while ((line = reader.readLine()) != null)
-                content.append(line).append("\n");
-            reader.close();
-
+            try (BufferedReader reader = new BufferedReader(new FileReader(filePath))) {
+                String line;
+                while ((line = reader.readLine()) != null)
+                    content.append(line).append("\n");
+            }
             return extractVersionFromHeader(content.toString());
         }
+
         // Extract the @version field from a file on github
         private static String fetchFileVersionFromGithub(String fileUrl) throws Exception {
             URL url = new URL(fileUrl);
             HttpURLConnection connection = (HttpURLConnection) url.openConnection();
             connection.setRequestMethod("GET");
 
-            BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+            if (connection.getResponseCode() != 200)
+                throw new IOException("Failed to fetch file. HTTP error code: " + connection.getResponseCode());
+
             StringBuilder content = new StringBuilder();
-            String inputLine;
-            while ((inputLine = in.readLine()) != null)
-                content.append(inputLine);
-            in.close();
+            try (BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()))) {
+                String inputLine;
+                while ((inputLine = in.readLine()) != null)
+                    content.append(inputLine);
+            }
 
             return extractVersionFromHeader(content.toString()); // Return file content
         }
         // Extract the @version field from the header comment
         private static String extractVersionFromHeader(String content) {
             // Regex to find @version followed by a version number
-            Pattern versionPattern = Pattern.compile("@version\\s+([\\d.]+)");
+            Pattern versionPattern = Pattern.compile("@version\\s+([\\d.]+(?:-\\w+)?)");
             Matcher matcher = versionPattern.matcher(content);
             return matcher.find()?matcher.group(1):null;
+        }
+
+        public static String getVersionInfo(){
+            return versionInfo;
         }
     }
 }
