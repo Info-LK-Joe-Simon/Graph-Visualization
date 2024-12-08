@@ -10,7 +10,7 @@ public class Main {
                 adjMat[i][j]=(Math.random()<0.8)?0:(Math.random()*20);
             }
         }
-        Display d=new Display(800, 800, adjMat/*g.getAdjMatrix()*/);
+        Display d=new Display(800, 800, adjMat);
         //Example for renaming
         try {
             Thread.sleep(100);
