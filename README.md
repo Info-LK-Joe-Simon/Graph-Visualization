@@ -4,8 +4,13 @@ Graph Visualization in Java for Info LK
 
 # TO DO
 Control knots, edges and whole graph via menu window
+
 save/export (.jpg (maybe also transparent .png), .json, ...) and load (.json) in a graph
+
 show adj matrix of graph
+
 option to show knot weight
+
 select edges visibly (by selecting knots)
+
 update readme
