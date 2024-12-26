@@ -16,3 +16,5 @@ Graph Visualization in Java for Info LK
 * update readme
 
 * check for updates dynamicly
+
+* upload input.java
