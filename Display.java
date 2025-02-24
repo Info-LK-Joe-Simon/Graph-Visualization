@@ -1,3 +1,4 @@
+import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.KeyEvent;
@@ -5,10 +6,7 @@ import java.awt.image.BufferedImage;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URI;
 import java.net.URL;
@@ -16,13 +14,14 @@ import java.util.ArrayList;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+
 /**
  * Klasse Knoten.
  * für die Darstellungen eines Graphen mittels Adjazenzmatrix
  * auf der Basis des Programms von O.Zimmermann (Benötigt mindestens die Klasse Knoten)
  *
  * @author F.Paul & J.S.Dschungelskog
- * @version 1.0.3-beta
+ * @version 1.0.4
  *
  * @source https://github.com/Info-LK-Joe-Simon/Graph-Visualization
  */
@@ -37,12 +36,20 @@ public class Display extends Thread {
 
     // Create a menu bar
     JMenuBar menuBar = new JMenuBar();
+    JMenu graphMenuBar = new JMenu("Graph");
+    JMenuItem saveGraphItem = new JMenuItem("Save");
     JMenu knotMenuBar = new JMenu("Knot");
-    JMenuItem knotMarkItem = new JMenuItem("MarkKnot");
-    JMenuItem knotUnmarkItem = new JMenuItem("UnmarkKnot");
+    JMenuItem knotMarkItem = new JMenuItem("Mark Knot");
+    JMenuItem knotUnmarkItem = new JMenuItem("Unmark Knot");
+    JMenu edgeMenuBar = new JMenu("Edge");
+    JMenuItem edgeMarkItem = new JMenuItem("Mark Edge");
+    JMenuItem edgeUnmarkItem = new JMenuItem("Unmark Edge");
     JMenu aboutMenuBar = new JMenu("About");
     JMenuItem aboutCreditsItem = new JMenuItem("Credits");
     JMenuItem aboutGithubItem = new JMenuItem("Source Code");
+    JMenuItem aboutCheckForUpdatesItem = new JMenuItem("Check for Updates");
+
+    JLabel versionLabel=new JLabel("Version unknown");
 
     private int width, height;
     private int[] oldMousePos={-1,-1};
@@ -78,6 +85,9 @@ public class Display extends Thread {
 
     private int decimalPlaces = 2;
 
+    private String localFilePathOfVersion="./src/Display.java";
+    private String gitHubFilePathOfVersion="https://github.com/Info-LK-Joe-Simon/Graph-Visualization/blob/main/Display.java";
+
     public Display(int w, int h, boolean autostart){
         initilize(w, h, null, autostart);
     }
@@ -98,7 +108,7 @@ public class Display extends Thread {
         initilize(800, 600, adjazenzmatrix,true);
     }
     public void initilize(int w, int h, double[][] adjazenzmatrix, boolean autostart){
-        versionInfo=VersionChecker.check_version("./src/Display.java", "https://github.com/Info-LK-Joe-Simon/Graph-Visualization/blob/main/Display.java");
+        versionInfo=VersionChecker.check_version(localFilePathOfVersion, gitHubFilePathOfVersion);
         width=w;
         height=h;
         frame= new JFrame();
@@ -156,11 +166,22 @@ public class Display extends Thread {
 
 
     private void addMenuBar(JFrame f) {
-        knotMenuBar.add(knotMarkItem);
-        knotMenuBar.add(knotUnmarkItem);
+        saveGraphItem.addActionListener(e -> saveGraph());
+        graphMenuBar.add(saveGraphItem);
+        menuBar.add(graphMenuBar);
+
         knotMarkItem.addActionListener(e -> markKnots(listOfSelectedKnots, true));
         knotUnmarkItem.addActionListener(e -> markKnots(listOfSelectedKnots, false));
+        knotMenuBar.add(knotMarkItem);
+        knotMenuBar.add(knotUnmarkItem);
         menuBar.add(knotMenuBar);
+
+        //edgeMarkItem.addActionListener(e -> markEdges(listOfSelectedKnots, true));
+        //edgeUnmarkItem.addActionListener(e -> markEdges(listOfSelectedKnots, false));
+        edgeMenuBar.add(edgeMarkItem);
+        edgeMenuBar.add(edgeUnmarkItem);
+        menuBar.add(edgeMenuBar);
+
 
         aboutCreditsItem.addActionListener(e -> credtis());
         aboutGithubItem.addActionListener(e -> {
@@ -170,8 +191,13 @@ public class Display extends Thread {
                 ex.printStackTrace();
             }
         });
+        aboutCheckForUpdatesItem.addActionListener(e -> {
+            versionInfo=VersionChecker.check_version(localFilePathOfVersion, gitHubFilePathOfVersion);
+            versionLabel = new JLabel(VersionChecker.getVersionInfo());
+        });
         aboutMenuBar.add(aboutCreditsItem);
         aboutMenuBar.add(aboutGithubItem);
+        aboutMenuBar.add(aboutCheckForUpdatesItem);
         menuBar.add(aboutMenuBar);
 
         f.setJMenuBar(menuBar);
@@ -179,7 +205,7 @@ public class Display extends Thread {
         f.repaint();
     }
 
-    public void switchToDarkMde() {
+    public void switchToDarkMode() {
         darkmode = !darkmode;
         frame.getContentPane().setBackground(darkmode ? c_black : c_white);
         graphics.setColor(darkmode ? c_white : c_black);
@@ -332,6 +358,7 @@ public class Display extends Thread {
                 graphics.drawString(weight, midX, midY - weightHeight / 2);
             }
     }
+
     private void update(){
         updateSize();
         updatePos();
@@ -571,6 +598,56 @@ public class Display extends Thread {
         });
     }
 
+    private void saveGraph() {
+        String[] options = {"Save as CSV", "Save as JPG"};
+        int choice = JOptionPane.showOptionDialog(
+                frame,
+                "Choose save format:",
+                "Save Graph",
+                JOptionPane.DEFAULT_OPTION,
+                JOptionPane.INFORMATION_MESSAGE,
+                null,
+                options,
+                options[0]
+        );
+
+        switch (choice) {
+            case 0:
+                try (FileWriter writer = new FileWriter("graph.csv")) {
+                    String csvFileString="";
+                    csvFileString+=",";
+                    for (int j = 0; j < adjazenzmatrix[0].length; j++)
+                        csvFileString+=knots[j].getName()+",";
+                    csvFileString+="\n";
+                    for (int i = 0; i < adjazenzmatrix.length; i++) {
+                        csvFileString+=knots[i].getName()+",";
+                        for (int j = 0; j < adjazenzmatrix[i].length; j++) {
+                            csvFileString+=adjazenzmatrix[i][j]!=0?String.valueOf(adjazenzmatrix[i][j]):"";
+                            if (j < adjazenzmatrix[i].length - 1)
+                                csvFileString+=","; // other versions might need ";"
+                        }
+                        csvFileString+="\n";
+                    }
+                    writer.write(csvFileString);
+                    JOptionPane.showMessageDialog(frame, "Graph saved as CSV successfully!");
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                break;
+            case 1:
+                try {
+                    File outputfile = new File("graph.jpg");
+                    ImageIO.write(image, "jpg", outputfile);
+                    JOptionPane.showMessageDialog(frame, "Graph saved as JPG successfully!");
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                break;
+            default:
+                break;
+        }
+    }
+
     class CreditsPanel extends JPanel {
         private class Star{
             private double[] velocity = new double[2];
@@ -704,7 +781,7 @@ public class Display extends Thread {
             setLayout(new BorderLayout());
             addMenuBar(this);
 
-            JLabel versionLabel = new JLabel(VersionChecker.getVersionInfo());
+            versionLabel = new JLabel(VersionChecker.getVersionInfo());
             versionLabel.setHorizontalAlignment(SwingConstants.LEFT);
             JPanel versionPanel = new JPanel(new BorderLayout());
             versionPanel.add(versionLabel, BorderLayout.WEST);
@@ -712,7 +789,7 @@ public class Display extends Thread {
 
             JCheckBox darkModeCheckbox = new JCheckBox("Enable Dark Mode");
             darkModeCheckbox.setSelected(display.darkmode);
-            darkModeCheckbox.addActionListener(e -> display.switchToDarkMde());
+            darkModeCheckbox.addActionListener(e -> display.switchToDarkMode());
 
             JCheckBox fillKnotsCheckbox = new JCheckBox("Fill Knots");
             fillKnotsCheckbox.setSelected(display.fillKnots);
