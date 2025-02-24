@@ -21,7 +21,7 @@ import java.util.regex.Pattern;
  * auf der Basis des Programms von O.Zimmermann (Benötigt mindestens die Klasse Knoten)
  *
  * @author F.Paul & J.S.Dschungelskog
- * @version 1.0.4
+ * @version 1.0.4-test
  *
  * @source https://github.com/Info-LK-Joe-Simon/Graph-Visualization
  */
@@ -193,7 +193,7 @@ public class Display extends Thread {
         });
         aboutCheckForUpdatesItem.addActionListener(e -> {
             versionInfo=VersionChecker.check_version(localFilePathOfVersion, gitHubFilePathOfVersion);
-            versionLabel = new JLabel(VersionChecker.getVersionInfo());
+            versionLabel.setText(versionInfo);
         });
         aboutMenuBar.add(aboutCreditsItem);
         aboutMenuBar.add(aboutGithubItem);
