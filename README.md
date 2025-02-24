@@ -7,6 +7,8 @@ Graph Visualization in Java for Info LK
 
 * save/export (.jpg (maybe also transparent .png), .json, ...) and load (.json) in a graph
 
+   * viewed screen as .jpg and adjMatrix as .csv is already possible :)
+
 * show adj matrix of graph
 
 * option to show knot weight
