@@ -21,7 +21,7 @@ import java.util.regex.Pattern;
  * auf der Basis des Programms von O.Zimmermann (Benötigt mindestens die Klasse Knoten)
  *
  * @author F.Paul & J.S.Dschungelskog
- * @version 1.0.4-test
+ * @version 1.0.4
  *
  * @source https://github.com/Info-LK-Joe-Simon/Graph-Visualization
  */
