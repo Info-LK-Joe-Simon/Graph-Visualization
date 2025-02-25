@@ -9,6 +9,10 @@ Graph Visualization in Java for Info LK
 
    * viewed screen as .jpg and adjMatrix as .csv is already possible :)
 
+* reset and refit view
+
+* client server application to share (live? screensharing?) in local network?
+
 * show adj matrix of graph
 
 * option to show knot weight
