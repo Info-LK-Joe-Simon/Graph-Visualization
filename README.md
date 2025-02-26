@@ -9,6 +9,14 @@ Graph Visualization in Java for Info LK
 
    * viewed screen as .jpg and adjMatrix as .csv is already possible :)
 
+   * save as .json
+
+   * load as .json (maybe also as .csv)
+
+   * saving menu to choose file path and file type
+
+   * aks for saving before closing programm
+
 * reset and refit view
 
 * client server application to share (live? screensharing?) in local network?
@@ -22,3 +30,11 @@ Graph Visualization in Java for Info LK
 * update readme
 
 * check for updates dynamicly (and maybe also update automatically)
+
+* Version Checker
+
+   * @dependency * (rekursive)
+
+   * @import * as *
+
+   * dialog frame to download and update files
